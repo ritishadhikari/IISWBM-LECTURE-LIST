@@ -1,0 +1,192 @@
+Regular Expressions : 
+
+A RegEx, or Regular Expression, is a sequence of characters that forms a search pattern.
+RegEx can be used to check if a string contains the specified search pattern.
+
+\D	Returns a match where the string DOES NOT contain digits
+\d	Returns a match where the string contains digits (numbers from 0-9)
+\s	Returns a match where the string contains a white space character
+\S	Returns a match where the string DOES NOT contain a white space character
+\w	Returns a match where the string contains any word characters (characters from a to Z, digits from 0-9, and the underscore _ character)
+\W	Returns a match where the string DOES NOT contain any word characters
+
+text = 'The Phone Number of the agent is 408-555-1234. Call soon in this number! Else call on 448-525-1234'
+
+"Number" in text
+
+### Finding for the string - "Number" through Regular Expressions
+re.search(pattern="Number", string=text)
+
+re.search(pattern = "[\w]{6}",string = text)
+
+re.search(pattern = "[\w]{6}",string = text).span()
+
+index1 = re.search(pattern = "[\w]{6}",string = text).span()[0]
+index2 = re.search(pattern = "[\w]{6}",string = text).span()[1]
+print(index1,index2, sep='--')
+
+text[index1:index2]
+
+Finding for the Number Format - "408-555-1234" through Regular Expressions
+re.search(pattern = "[\d]{3}[-][\d]{3}[-][\d]{4}",string = text)
+re.search(pattern = "[\d]{3}[-][\d]{3}[-][\d]{4}",string = text).span()
+
+index1 = re.search(pattern = "[\d]{3}[-][\d]{3}[-][\d]{4}",string = text).span()[0]
+index2 = re.search(pattern = "[\d]{3}[-][\d]{3}[-][\d]{4}",string = text).span()[1]
+
+text[index1:index2]
+
+### Implementing re.findall to search for multiple patterns
+
+re.findall(pattern= "[\d]{3}[-][\d]{3}[-][\d]{4}",string=text)
+
+### Implementing re.finditer to search the positions for multiple patterns
+re.finditer(pattern = "[\d]{3}[-][\d]{3}[-][\d]{4}",string = text)
+
+list(re.finditer(pattern = "[\d]{3}[-][\d]{3}[-][\d]{4}",string = text))
+
+for patterns in re.finditer(pattern = "[\d]{3}[-][\d]{3}[-][\d]{4}",string = text):
+    print(patterns)
+    print(f"Position is  - {patterns.span()} \n")
+    index1 = patterns.span()[0]
+    index2 = patterns.span()[1]
+    print(f"Text is {text[index1:index2]}", "\n\n")
+
+### We will retrieve numbers of various digits or information of various length
+
+phrase = 'There are 3 numbers 346 inside 5 this sentence.'
+
+re.findall(pattern = '[\d]{1,3}',string = phrase)
+
+### In this example we will omit all the numbers and will only write back the characters
+re.findall(pattern = '[\D][\S]{6,8}',string = phrase)
+k = re.findall(pattern='[^\d]+',string=phrase)
+' '.join([l.strip() for l in k] )
+
+### Substituting a pattern by another
+
+text = 'The Phone Number of the agent is 408-555-1234. Call soon in this number! Else call on 448-525-1234'
+
+re.sub(pattern="[\d]{3}[-][\d]{3}[-][\d]{4}", repl='Not Disclosed', string= text, count=2)
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+Cleaning and Preparing Data through Pandas and Scikit
+
+import pandas as pd
+import numpy as np
+import re
+
+df = pd.read_csv(filepath_or_buffer=r'D:/IISWBM/cms_scrape.csv',engine='python' )
+
+df.head()
+
+#Converting the date and year into appropriate data type
+df['year'] = df['year'].astype(pd.Int64Dtype())
+df['date'] = df['date'].astype(pd.Int64Dtype())
+
+#Lower
+df['summary'].str.lower().to_frame()
+
+#upper
+df['summary'].str.upper().to_frame()
+
+#Month contains Spaces
+df['month'].head(7)
+
+#full strip
+df['month'].str.strip().head(7)
+
+	left strip
+df['month'].str.lstrip()
+
+# Columns can be done as well - lower, upper, capitalize etc
+df.columns.str.capitalize()
+
+df.head()
+
+#Splitting
+df['calendar'].str.split('-')
+
+# Expanding the Splits
+df['calendar'].str.split('-', expand=True)
+
+# Expanding the Splits based on user inputs
+df['calendar'].str.split('-', expand=True, n=1)
+
+# Expanding the Splits with r split
+df['calendar'].str.rsplit('-', expand=True, n=1)
+
+# str replace command
+df['summary'].str.replace('Programming','Coding').to_frame()
+
+#pd.replace with regex as True
+df.replace({'summary':{'Programming' : 'Coding' }, 'headline' : {'Python':'Java'}}, regex=True)
+
+df.head()
+
+#concatenating all strings in a series
+df['calendar'].str.cat(sep=' ')
+
+#concatenating all strings in a series and specially marking the Nan Values with some pre mentioned values
+df['calendar'].str.cat(sep=' ', na_rep='No Calendar')
+
+#concatenating one columns with another
+df['month'].str.cat(df['date'].astype('str'), sep = '-')
+
+df.head()
+
+# str.contains
+df[df['headline'].str.contains('Threading')]
+
+#using regular expression to search a specific word
+def search_word(text):
+    if re.search(pattern='Threading', string = text):
+        return True
+    else:
+        return False
+
+df[df['headline'].apply(func=search_word)]
+
+#str with contains with regular expressions -- Starts with P and ends with y
+df[(df['headline'].str.contains(r'^[P]')) & (df['headline'].str.contains(r'[y]$')) ]
+
+# str starts with Visual
+df[df['headline'].str.startswith('Visual')]
+
+# Str endswith function
+df[df['headline'].str.endswith(')')]
+
+# str- zfill
+df['calendar'].str.zfill(width=12)
+
+# str - pad
+df['calendar'].str.pad( width = 20, side='both', fillchar='*')
+
+
+# Fill the mean of the date and month as april for all the NAN or Missing Values
+df.fillna(value={'date': int(np.mean(df['date'])),   'month': 'April' })
+
+#copy na values with previous day's values
+df.fillna(method ='ffill').head(15)
+
+df.iloc[50]
+
+#pandas dropna with thresh
+df.dropna(thresh=6)
+
+df.dropna(thresh=6).iloc[50]
+
+# Drop Duplicates
+df[['headline','month']].drop_duplicates()
+
+from sklearn.impute import SimpleImputer
+
+simple_impute_mode = SimpleImputer(strategy='most_frequent')
+
+df['month_1']= simple_impute_mode.fit_transform(X=df['month'].values.reshape(-1,1))
+
+simple_impute_mean = SimpleImputer(strategy='mean') 
+
+df['year_1'] = simple_impute_mean.fit_transform(np.array(df['year']).reshape(-1,1))
+

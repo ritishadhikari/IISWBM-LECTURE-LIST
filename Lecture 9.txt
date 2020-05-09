@@ -1,0 +1,150 @@
+Word Vectorization:
+
+import numpy as np
+import pandas as pd
+import spacy
+from warnings import filterwarnings
+filterwarnings(action='ignore')
+
+pd.set_option('display.max_columns', None)
+
+### A word vector is a row of real valued numbers (as opposed to dummy numbers) where each point captures a dimension of the word’s meaning and where semantically similar words have similar vectors
+ - King and Man will have some similarity in their Vector Numbers
+ - Similarly Queen and Woman will have some similarity in their Vector Numbers
+
+### In Modern NLP,   Word Vectors are compared by their Co-sine Similarity rather than by their Euclidean Distance
+
+### <a href='https://www.machinelearningplus.com/nlp/cosine-similarity/'> Link to Cosine Similarity Fundamentals</a>
+
+### <a href='https://towardsdatascience.com/similarity-measures-e3dbd4e58660'> Link to Cosine and Euclidean Formula </a>
+
+#################################################################################################################################################################
+
+df = pd.DataFrame(data = ['Mr. Trump became president after winning the political election. Though he lost the support of some republican friends, Trump is friends with President Putin',
+                           'President Trump says Putin had no political interference is the election outcome. He says it was a witchhunt by political parties. He claimed President Putin is a friend who had nothing to do with the election',
+                           'In this Python Django Tutorial, we will be learning how to access the Django Admin Page for our application. The Administration Page is a great way to see what data is currently in our application, and also gives us a nice GUI for creating or modifying that data.'], columns=['Message'])
+
+df
+
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+
+vec = CountVectorizer()
+
+vec.fit(df['Message'])
+
+vec_transformed = vec.transform(df['Message'])
+
+tfidf = TfidfTransformer()
+
+tfidf_transformed = tfidf.fit_transform(vec_transformed)
+
+tfidf_transformed
+
+df2 = pd.DataFrame(data=tfidf_transformed.toarray(), index=doc1['Message'], columns=vec.get_feature_names())
+
+df2
+
+from sklearn.metrics.pairwise import cosine_similarity
+
+cosine_similarity(X=df, Y=df)
+
+
+#################################################################################################################################################################
+
+### Working with Spacy for Word Vectorizer
+
+nlp = spacy.load("en_core_web_md")
+
+nlp(text=u"lion").vector
+
+nlp(text=u"lion").vector.shape
+
+nlp("The Quick brown fox jumped").vector
+
+nlp("The Quick brown fox jumped").vector.shape
+
+tokens = nlp(text = u"queen King prince")
+
+tokens
+
+tokens[1]
+
+tokens[2]
+
+tokens[1].similarity(tokens[2])
+
+for t1 in tokens:
+    for t2 in tokens:
+        print(t1.text, t2.text, t1.similarity(t2))
+
+tokens[1].has_vector
+
+tokens[1].is_oov
+
+nlp.vocab.vectors.shape
+
+tokens1 = nlp(text = "leaf tree Ritish")
+
+for token in tokens1:
+    print(f"{token.text} ---- {token.has_vector} ---- {token.vector_norm} ---- {token.is_oov}") #oov - out of vocabulary, vector-norm - reducing the 300 vectors into a single scaler value for a word
+
+#vector_norm for 'tree'
+np.sqrt(np.sum(nlp(text='tree').vector**2))
+
+#################################################################################################################################################################
+
+### Using Scipy's Cosine Similarity with Spacy
+
+from scipy.spatial.distance import cosine
+
+cosine_similarity = lambda v1, v2 : 1 - cosine(v1,v2)
+
+df2.iloc[2].values[0]
+
+doc1.iloc[1].values[0]
+
+nlp(text=doc1.iloc[2].values[0]).vector
+
+nlp(text=doc1.iloc[1].values[0]).vector
+
+# Computing Similarities with Spacy's vector Similarities
+cosine_similarity(v1=nlp(text=doc1.iloc[0].values[0]).vector, v2=nlp(text=doc1.iloc[2].values[0]).vector)
+
+
+#checking for the co-sine similarity for the elements in the tokens list :
+for t1 in tokens:
+    for t2 in tokens:
+        #print(t1.text, t2.text, t1.similarity(t2))
+        print(t1.text, t2.text, cosine_similarity(t1.vector, t2.vector) )
+
+king = nlp(text='king').vector
+man = nlp(text='man').vector
+woman = nlp(text='woman').vector
+
+
+new_word = king - man + woman
+
+
+computed_similarities = []
+for word in nlp.vocab:
+    
+    if word.has_vector and word.is_alpha and word.is_lower:
+        similarity = cosine_similarity(new_word, word.vector)
+        computed_similarities.append((word.text, similarity))
+
+computed_similarities
+
+computed_similarities = [(word.text, cosine_similarity(new_word, word.vector)) for word in nlp.vocab if word.has_vector and word.is_alpha and word.is_lower ]
+
+computed_similarities
+
+sorting the computed similarities	
+computed_similarities = sorted(computed_similarities,key= lambda item: -item[1]) 
+
+computed_similarities
+
+#printing the first 10 common words to the new word
+for text in computed_similarities[0:10]:
+    print(text[0], text[1], sep='--')

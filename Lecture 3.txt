@@ -1,0 +1,117 @@
+Requests : 
+
+import requests
+
+r = requests.get(url="https://xkcd.com/353/",  timeout=5)
+
+dir(r)
+
+r.url
+
+r.status_code
+
+# Fetching anything which is less than 400 error, the response should be true
+r.ok
+
+
+r.headers
+
+
+print(r.text)
+
+
+
+#getting a picture file
+
+r = requests.get(url="https://imgs.xkcd.com/comics/python.png", timeout=5)
+print(r.content)
+
+
+#saving the image in a particular location
+with open(file='D:\IISWBM\comic.png', mode='wb') as f :
+    image = f.write(r.content)
+
+
+#Getting Real Time Data
+
+#https://www.flipkart.com/men/tshirts/pr?sid=2oq%2Cs9b%2Cj9y&otracker=nmenu_sub_Men_0_T-Shirts&page=7
+
+payload= {'sid':'2oq%2Cs9b%2Cj9y', 'otracker':'nmenu_sub_Men_0_T-Shirts', 'page':5}
+	
+r = requests.get(url='https://httpbin.org/pr', params=payload)
+
+r.status_code
+
+print(r.url)
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+Webscrapping	
+
+Requirements : [https://coreyms.com/category/development/python, https://www.whitehouse.gov/briefings-statements/]
+
+from bs4 import BeautifulSoup
+import requests
+import csv
+import json
+
+source = requests.get(url="https://coreyms.com/category/development/python", timeout=5).text
+soup = BeautifulSoup(markup=source, features='lxml')
+
+link_connect = soup.body.find(name='div',class_='site-container').find(name='div', class_='site-inner').find(name='div', class_='content-sidebar-wrap').find(name='main', class_='content')
+
+Header= link_connect.article.find(name='header', class_='entry-header').find(name='h2',class_='entry-title').find(name='a',class_='entry-title-link').text
+
+calendar.split()
+
+Month = calendar.split()[0]
+
+date = calendar.split()[1].split(',')[0]
+
+year = calendar.split()[2]
+
+synopsis = link_connect.article.find(name='div', class_='entry-content').p.text
+
+vid_id = link_connect.article.find(name='div', class_='entry-content').find(name='span', class_='embed-youtube').find(name='iframe', class_='youtube-player')['src'].split('?')[0].split('/')[-1]
+
+vid_id
+
+youtube_link = f'https://youtube.com/watch/v={vid_id}'
+
+
+csv_file = open(file='D:\IISWBM\cms_scrape.csv',mode='w',newline='')
+csv_writer = csv.writer(csv_file)
+csv_writer.writerow(['headline','summary','month','date','year','video_link'])
+for articles in link_connect.findAll('article'):
+    header = articles.find(name='header', class_='entry-header').find(name='h2',class_='entry-title').find(name='a',class_='entry-title-link').text
+    calendar = articles.find(name='header', class_='entry-header').find(name='p', class_='entry-meta').find(name='time',class_='entry-time').text
+    month = calendar.split()[0]
+    date = calendar.split()[1].split(',')[0]
+    year = calendar.split()[2]
+    synopsis = articles.find(name='div', class_='entry-content').p.text
+    vid_id = articles.find(name='div', class_='entry-content').find(name='span', class_='embed-youtube').find(name='iframe', class_='youtube-player')['src'].split('?')[0].split('/')[-1]
+    youtube_link = f'https://youtube.com/watch?v={vid_id}'
+    #print(youtube_link,"\n")
+    csv_writer.writerow([header,synopsis,month,date,year,youtube_link])
+csv_file.close()
+
+
+json_file = open(file='D:\IISWBM\cms_scrape.json',mode='w+',newline='\n')
+json_data = {}
+json_data['people'] = []
+for articles in link_connect.findAll('article'):
+    
+    header = articles.find(name='header', class_='entry-header').find(name='h2',class_='entry-title').find(name='a',class_='entry-title-link').text
+    calendar = articles.find(name='header', class_='entry-header').find(name='p', class_='entry-meta').find(name='time',class_='entry-time').text
+    month = calendar.split()[0]
+    date = calendar.split()[1].split(',')[0]
+    year = calendar.split()[2]
+    synopsis = articles.find(name='div', class_='entry-content').p.text
+    vid_id = articles.find(name='div', class_='entry-content').find(name='span', class_='embed-youtube').find(name='iframe', class_='youtube-player')['src'].split('?')[0].split('/')[-1]
+    youtube_link = f'https://youtube.com/watch?v={vid_id}'       
+    json_data['people'].append({'header' : header,'synopsis':synopsis, 'month': month ,'date':date,'year': year, 'yt_link':youtube_link})  
+json.dump(obj=json_data, fp=json_file, indent=2, sort_keys=True)
+json_file.close()
+
+
+

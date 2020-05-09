@@ -1,0 +1,136 @@
+Association Rule Mining:
+
+cust_1 = ['toothpaste', 'mosquito_oil', 'deodrant' ]
+cust_2 = ['shaving_cream', 'blade', 'napkin', 'soap', 'body_gel']
+cust_3 = ['deodrant', 'detergent', 'toilet_cleaner']
+cust_4 = ['mosquito_oil', 'deodrant']
+cust_5 = ['blade', 'toothpaste', 'deodrant', 'napkin']
+cust_6 = ['shaving_cream', 'detergent', 'deodrant','soap']
+cust_7 = ['mosquito_oil', 'body_gel']
+cust_8 = ['napkin','soap','deodrant']
+cust_9 = ['toothpaste','body_gel', 'napkin']
+cust_10 = ['blade','shaving_cream', 'body_gel']
+
+
+## <font color='#370505'> Market Basket Analysis / Association Rule Mining is one of the key techniques used by large retailers to uncover associations between items. It helps in Business Making Profits. </font>
+
+## <font color = 'Green'> A ==> B ; based on co-occurences and not on causality </font>
+
+## <font color='red'> A is an Antecedent which is purchased by the customer and B is the consequent which is also purchased by the customer when he purchases item A </font>
+
+##  <font color='MAGENTA'> Bread (Antecedent) and Jams/Butter(Consequent) or Laptops(Antecedent) and Laptop Bags(Consequent) </font>
+
+## <font color='blue'>The measures which is used in Association Rule Mining are :</font>
+  - <b>Support</b>
+  - <b>Confidence</b>
+  - <b>Lift</b>
+  - <b>Leverage</b>
+  
+### <font color='#BD3C3C'> Support = <math>{freq(A,B) / N} </math> where N is the total Number of transaction. range: [0,1].  Through Support we can filter out the items which have been bought less frequently. </font>
+
+### <font color='#34908F'> Confidence = <math>{freq(A,B) / freq(A)} </math>. range: [0,1]. Through Confidence we can filter  the items which have been more frequently (Consequent) when the initial item (Antecedent) had been purchased.  </font>
+
+### <font color='#90348D'> Lift = <math>{freq(A,B) / freq(A) * freq(B)} </math>. range: [0,inf]. Lift is more advanced stage of the filtering criteria wherein we only keep those items which have very high inter dependency.  
+    
+### <font color='orange'> Leverage = <math>{freq(A,B) - freq(A) * freq(B)} </math>. range: [-1,1]. In some Business Scanarios in place of Lift, Leverage is Used </font>
+    
+### <font color='#C6A306'> Conviction = <math>{1-freq(B) / 1 - Confidence(A,B)} </math>. range: [0,inf]. A high conviction value means that the consequent is highly depending on the antecedent. </font>
+
+
+# Lets take all the customer's purchase information under one list :
+total_trans_list = [cust_1, cust_2, cust_3, cust_4, cust_5, cust_6, cust_7, cust_8, cust_9, cust_10]
+
+total_trans_list
+
+
+# get all the items in a single list
+total_elem_dup = [] 
+for elements in total_trans_list:
+    for element in elements:
+        #print(element)
+        total_elem_dup.append(element)
+
+total_elem_dup
+
+set(total_elem_dup)
+
+len(set(total_elem_dup))
+
+len(set([element for elements in total_trans_list for element in elements]))
+
+
+_______________________________________________________________________________________________________________________________________________________________
+
+
+import mlxtend
+import pandas as pd
+import numpy as np
+
+from mlxtend.preprocessing import TransactionEncoder
+
+oht = TransactionEncoder()
+
+oht.fit(X = total_trans_list)
+
+oht.columns_
+
+oht.columns_mapping_
+
+oht_ary = oht.transform(X=total_trans_list)
+
+oht_ary
+
+#Putting the oht_ary in a Dataframe format :
+df = pd.DataFrame(data=oht_ary, columns=oht.columns_)
+
+#Apriori module from the mlxtend package gives us about the support of the items
+from mlxtend.frequent_patterns import apriori
+
+## Support
+frequent_items = apriori(df=df, min_support=0.2, use_colnames=True)
+
+total_trans_list
+
+frequent_items
+
+# Association_rules module from mlxtend gives us the confidence, lift, leverage and the conviction of the items 
+from mlxtend.frequent_patterns import association_rules
+
+## confidence
+
+association_confidence = association_rules(df=frequent_items, metric='confidence', min_threshold=0.5)
+
+total_trans_list
+
+association_confidence
+
+# sorting the dataset through the confidence
+association_confidence.sort_values(by='confidence', ascending=False)
+
+## Lift
+
+association_lift = association_rules(df=frequent_items, metric='lift', min_threshold=1.2)
+
+total_trans_list
+
+association_lift
+
+association_lift.sort_values(by='lift', ascending=False)
+
+## Leverage
+
+association_leverage = association_rules(df=frequent_items, metric='leverage', min_threshold=0)
+
+total_trans_list
+
+association_leverage
+
+## Conviction
+
+association_conviction = association_rules(df=frequent_items, metric='conviction', min_threshold=1)
+
+total_trans_list
+
+association_conviction
+
+association_conviction.sort_values(by='conviction', ascending=False)

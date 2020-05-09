@@ -1,0 +1,228 @@
+import pandas as pd
+import numpy as np
+from matplotlib import pyplot as plt
+%matplotlib inline
+pd.set_option('display.max_columns', None)
+
+## Principle Components through a Traditional Numeric Dataset : 
+
+## When there are large number of features in a Dataset, it might become memory intensive to feed the entire features to either traditional machine learning or Deep Learning Models
+
+## One option can be to reduce the dimensions of the features into very few principle components which are generated through the help of eigen values. 
+
+## The Eigen Values are such that the highest Eigen Value component will have the largest amount of variance present in the entire dataset and thereafter while the eigen value decreases, so is the variance.
+
+## Ideally the total number of Eigen Values will be the same as the total number of features in the Dataset, but to reduce the dimension, we will select the top n eigen values which will have the top n variances.
+
+## The Eigen Values gives way to the Eigen Vectors which are the Principle Components having the same number of rows as the original dataset.
+
+## This Principle components will all be perpendicular to each other, which means the variance data which is collected by each Principle Components are totally heterogenous and has zero
+cosine similarity with the rest of the Principle Components.
+
+## <a href='https://www.youtube.com/watch?v=IdsV0RaC9jM'> <b>Link for Finding Eigen Values and Eigen Vectors </b></a>   
+
+
+from sklearn.datasets import load_breast_cancer
+
+cancer = load_breast_cancer()
+
+cancer.data
+
+cancer.feature_names
+
+cancer.target
+
+cancer_feat = pd.DataFrame(data=cancer.data, columns=cancer.feature_names)	
+
+cancer_target = pd.DataFrame(data=cancer.target, columns=['Result'])
+
+cancer_df = pd.concat([cancer_feat,cancer_target], axis=1)
+
+cancer_df.head()
+
+
+# Scaling the entire dataset
+from sklearn.preprocessing import StandardScaler
+
+scale = StandardScaler()
+
+scale.fit(X = cancer_feat.values)
+
+scaled_data = scale.transform(X= cancer_feat.values)
+
+scaled_data
+
+scaled_data_feats =pd.DataFrame(data = scaled_data, columns=cancer_feat.columns)
+
+scaled_data_feats.shape
+
+scaled_data_feats
+
+
+#Implementing PCA
+
+from sklearn.decomposition import PCA
+
+pca = PCA(n_components=2)
+
+pca.fit(X = scaled_data_feats)
+
+principle_components = pca.transform(X= scaled_data_feats)
+
+principle_components
+
+principle_components.shape
+
+scaled_data_feats.shape
+
+scaled_data_feats.columns
+
+
+# The two principle components will be such that they are perpendicular to each other and would collect the effective variances which are totally dissimilar to one another (Zero Cosine 
+Similarity)
+from scipy.spatial.distance import cosine
+principle_components[:,0]
+principle_components[:,1]
+1-cosine(principle_components[:,0],principle_components[:,1])
+
+
+### We will consider any two features and check whether they can segment the results effectively
+
+plt.figure(figsize=(8,10))
+plt.scatter(x = scaled_data_feats['worst texture'], scaled_data_feats['radius error'], edgecolors='green', c=cancer_target['Result'])
+plt.xlabel(xlabel='worst texture')
+plt.ylabel(ylabel='radius error')
+
+
+### We will now check whether the two principle components can separate the results effectively:
+
+plt.figure(figsize=(8,10))
+plt.scatter(x = principle_components[:,0], y=principle_components[:,1], edgecolors='green',  c=cancer_target['Result'])
+plt.xlabel(xlabel='First Principle Component')
+plt.ylabel(ylabel='Second Principle Component')
+
+
+### Now that we have reduced the dimensions and have extracted the two main principle components, we now shall see which columns play the most important roles for the respective principle 
+components:
+
+
+# The amount of variance explained by each of the selected components.
+pca.explained_variance_
+
+# Percentage of variance explained by each of the selected components. 
+pca.explained_variance_ratio_
+
+# The Value of the variances of both the components w.r.t all the 30 columns. Negative Variance would signify that they are inversely co-related and not negative Variance. 
+pca.components_
+
+# The total Number of feature vectors responsible for each Principle Components:
+pca.n_features_
+
+### Our Aim will be to derive the Columns which will have the largest Variances:
+
+pca.components_.T
+
+for n in range(len(pca.components_)):
+    print("comp_"+f"{n+1}")
+
+comp_df = pd.DataFrame(data=pca.components_.T, columns=['comp_'+f'{n+1}' for n in range(len(pca.components_))], index=scaled_data_feats.columns)
+
+comp_df
+
+# Getting the max values for the variance and its associated feature for a particular Principle Axis
+comp_df['comp_1'][comp_df['comp_1']==comp_df['comp_1'].max()]
+
+# Extracting the feature
+comp_df['comp_1'][comp_df['comp_1']==comp_df['comp_1'].max()].index[0]
+
+# Extracting the Value of the Variance
+comp_df['comp_1'][comp_df['comp_1']==comp_df['comp_1'].max()].values[0]
+
+
+## Getting the Features which is responsible for the maximum variance for each principle components :
+dic = {}
+for cols in comp_df.columns:
+    dic[cols] = [comp_df[cols][comp_df[cols]==comp_df[cols].max()].index[0], comp_df[cols][comp_df[cols]==comp_df[cols].max()].values[0]]
+
+dic
+
+dic = {cols : [[comp_df[cols][comp_df[cols]==comp_df[cols].max()].index[0], comp_df[cols][comp_df[cols]==comp_df[cols].max()].values[0]]] for cols in comp_df.columns}
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PCA_Word_Vectors :
+
+import spacy
+
+nlp = spacy.load("en_core_web_md")
+
+animals = "dog cat hamster lion tiger elephant cheetah monkey gorilla antelope rabbit mouse rat zoo home pet fluffy wild domesticated"
+
+animal_tokens = nlp(text = animals)
+
+animal_tokens
+
+len(animal_tokens)
+
+#Taking Vector Component for each word and storing in a list
+animal_vectors= [word.vector for word in animal_tokens if word.has_vector]
+
+animal_vectors.shape
+
+animal_vectors
+
+pca = PCA(n_components=2)
+
+pca.fit(X = animal_vectors)
+
+animal_vecs_pca = pca.fit_transform(X =animal_vectors)
+
+animal_vecs_pca.shape
+
+animal_vecs_pca
+
+#we have to apppend the animal with the principle components:
+
+animals
+
+animals.split()
+
+np.array(animals.split()).shape
+
+# Let the animals list have 1 columns
+np.array(animals.split()).reshape(-1,1)
+
+np.array(animals.split()).reshape(-1,1).shape
+
+pca_word_vec = np.concatenate([np.array(animals.split()).reshape(-1,1), animal_vecs_pca],axis=1)
+
+legends = pca_word_vec[:,0]
+legends
+
+x1 = pca_word_vec[:,1]
+x1
+
+y1 = pca_word_vec[:,2]
+y1
+
+since the value in x1 and y1 are all strings, we need to convert into respective floats before visualizing:
+x1 =    [np.float32(pts) for pts in x1]
+y1=    [np.float32(pts) for pts in y1]
+
+
+#Representing the principle components through a scatter plot:
+
+plt.figure(figsize=(12,10))
+for numbers,word in enumerate(legends):
+    x, y = x1[numbers], y1[numbers]
+    plt.scatter(x, y)
+    plt.text(x+.03, y+.03, word, fontsize=9)
+plt.grid()
+
+
+
+
+
+
+
+

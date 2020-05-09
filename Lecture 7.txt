@@ -1,0 +1,244 @@
+Count Vectorizer and TFIDF :
+
+import pandas as pd
+import numpy as np
+from matplotlib import pyplot as plt
+%matplotlib inline
+import seaborn as sns
+import nltk
+
+### Importing nltk stopwords library
+
+nltk.download('stopwords')
+
+
+#Opening the csv file through csv
+import csv
+
+csv_file = open(file=r'C:\Users\ritis\Documents\Jupyter Notebook Files\Data Science Machine Learning Udemy\Refactored_Py_DS_ML_Bootcamp-master\20-Natural-Language-Processing\smsspamcollection\SMSSpamCollection.csv',mode='r')
+
+csv_reader = csv.reader(csv_file, delimiter = '\t')
+
+message = list(csv_reader)
+
+for m in message:
+    print(m[0])
+
+### Opening the csv through pandas for doing analysis
+
+messages = pd.read_csv(r'D:/IISWBM/SMSSpamCollection.csv',sep='\t', names=['label','message'] )
+
+messages.head()
+
+messages.describe()
+
+messages.groupby('label').describe()
+
+messages['label'].value_counts()
+
+# Finding the Length of each messages
+messages['length'] = messages.apply(func=lambda d: len(d['message']), axis=1)
+
+messages.head()
+
+messages['length'] = messages['message'].str.len()
+
+messages.head()
+
+messages['length'].describe()
+
+messages['message'][messages['length']==910].values[0]
+
+messages.head()
+
+messages.hist(by='label', column='length',bins=50, figsize=(12,5),sharex=True, sharey=False);
+
+
+Checking for a simple message
+mess = "Sample message! Notice: it has punctuation."
+
+import string
+
+string.punctuation
+
+for c in mess:
+    if c not in string.punctuation:
+        print(c)
+
+no_punct = [c for c in mess if c not in string.punctuation]
+
+no_punct = ('').join(no_punct)
+
+no_punct
+
+from nltk.corpus import stopwords
+
+stopwords.words(fileids='english')
+
+#Finding words which dont have stopwords
+no_punc_stop = []
+for c in no_punct.split():
+    if c.lower() not in stopwords.words(fileids='english'):
+        no_punc_stop.append(c)
+
+[c for c in no_punct.split() if c.lower() not in stopwords.words(fileids='english') ]
+
+(' ').join(no_punc_stop)
+
+
+# Creating a Function which will give words which will not contain any punctuations and 
+def purewords(message):
+    
+    '''
+    1. Remove Punctuations
+    2. Remove Stopwords
+    3. Return List of Clean Stop Words
+    '''
+    
+    no_punc = ''.join([c for c in message if c not in string.punctuation])
+    no_punc_stop = [c for c in no_punc.split() if c not in stopwords.words(fileids='english')]
+    return no_punc_stop 
+
+#Applying the function in our dataframe
+
+messages['message'].head().apply(func=purewords)
+
+from sklearn.feature_extraction.text import CountVectorizer
+
+bow_transformer = CountVectorizer(analyzer=purewords)
+
+
+bow_transformer.fit(messages['message'])
+
+# How many text will be fed to the machine learning algorithm
+bow_transformer.get_feature_names()
+
+len(bow_transformer.get_feature_names())
+
+# This command gives the vocabulory list
+bow_transformer.vocabulary_
+
+len(bow_transformer.vocabulary_)
+
+max(sorted(bow_transformer.vocabulary_.values()))
+
+bow_transformer.vocabulary_['0']
+
+
+messages['message'][2]
+
+mess2 = bow_transformer.transform([messages['message'][2]])
+
+mess2.shape
+
+print(mess2)
+
+type(mess2)
+
+print(mess2.toarray())
+
+#the string wkly is present in the above row
+bow_transformer.get_feature_names()[11315]
+
+d = pd.DataFrame(data=mess2.toarray(), columns=bow_transformer.get_feature_names(), index=[messages['message'][2]])
+
+d
+
+
+### Lets check the words which are in the word counts
+
+d.iloc[0]
+d.iloc[0][d.iloc[0]>=1]
+
+
+### Doing the transformation for all the rows in the DataFrame
+bow_transformer_transformed = bow_transformer.transform(messages['message'])
+
+bow_transformer_transformed
+
+bow_transformer_transformed.shape
+
+messages['message'].shape
+
+pd.DataFrame(data=bow_transformer_transformed.toarray(), index=messages['message'], columns=bow_transformer.get_feature_names())
+
+
+#Non Zero Columns in the Transformed DataFrame
+bow_transformer_transformed.nnz
+
+sparcity = (100* bow_transformer_transformed.nnz) /(bow_transformer_transformed.shape[0]*bow_transformer_transformed.shape[1])
+sparcity
+
+### Now we shall use Term Inverse Document Frequency Index Matrix
+
+from sklearn.feature_extraction.text import TfidfTransformer
+
+tfidf = TfidfTransformer()
+
+bow_transformer_tfidf = tfidf.fit(bow_transformer_transformed)
+
+
+### Lets check for the tfidf value set for each words
+bow_transformer_tfidf.idf_
+
+bow_transformer.vocabulary_
+
+#checking for the idf value for a particular word
+bow_transformer_tfidf.idf_[bow_transformer.vocabulary_['crazy']]
+
+
+### Finding the words with the highest tfidf
+
+tfidf.idf_.argsort()
+
+tfidf.idf_[1001]
+
+tfidf.idf_[588]
+
+tfidf.idf_[4851]
+
+#for example purpose
+[3,4,2,8,1][::-1][0:2]
+
+tfidf.idf_.argsort().tolist()[::-1][0:10]
+
+for positions,indexes in enumerate(tfidf.idf_.argsort().tolist()[::-1][0:10]):
+    print(f"{positions+1}---{bow_transformer.get_feature_names()[indexes]}")
+
+
+
+# Transform a Particular Word Count Vectorized sentence
+
+print(mess2)
+
+tfidf_mess2 = bow_transformer_tfidf.transform(mess2)
+
+print(tfidf_mess2)
+
+### Transforming with TFIDF for the entire rows present in the DataFrame
+
+bow_transformer_tfidf_transformed = bow_transformer_tfidf.transform(bow_transformer_transformed)
+
+t = pd.DataFrame(data=bow_transformer_tfidf_transformed.toarray(), index=messages['message'], columns=bow_transformer.get_feature_names())
+
+t
+
+### Lets Check for a Particular Sentence and find out its tfidf values
+
+t.index[1500]
+
+t.iloc[1500][(t.iloc[1500]<0.3) & (t.iloc[1500]>0.15)]
+
+
+# Feeding the Values in a Machine Learning Algorithm
+from sklearn.naive_bayes import MultinomialNB
+mnb = MultinomialNB()
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(bow_transformer_tfidf_transformed, messages['label'], test_size=0.30, random_state=101)
+mnb.fit(X = X_train, y= y_train)
+new_text = "You are a lottery winner worth $2 Million. Congratulations"
+pd.Series(data=new_text)
+new_text_bow = bow_transformer.transform(pd.Series(data=new_text))
+new_text_tfidf = bow_transformer_tfidf.transform(X=new_text_bow)
+mnb.predict(new_text_tfidf)
+

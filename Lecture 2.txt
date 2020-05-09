@@ -1,0 +1,279 @@
+https://veego.krackin.com/b/sub-fad-j9x
+
+1. Text Files : 
+
+requirements : Simple_text.txt
+
+#opening test.txt in read only mode and storing it in myfile
+myfile = open (file='D:\IISWBM\Simple_text.txt', mode = 'r')
+
+myfile.read()
+
+#reading myfile once again
+myfile.read()
+
+#Resetting the position of the reader to 0 Value through seek
+myfile.seek(0)
+
+#After applying seek reading myfile again
+myfile.read()
+
+myfile.seek(0)
+
+#putting the entire content of the read only version of my file into a variable called content
+content = myfile.read()
+
+print(content)
+
+#closing the myfile variable
+myfile.close()
+
+
+
+#Readlines
+myfile = open(file='D:\IISWBM\Simple_text.txt', mode = 'r')
+
+myfile.readlines()
+
+myfile.seek(0)
+
+myline = myfile.readlines()
+
+myline
+
+for line in myline:
+    print (line)
+
+
+#Read and Write to the file
+myfile = open(file='D:\IISWBM\Write_text.txt',mode='w+')
+
+myfile.read()
+
+myfile.write("My Brand New Text")
+
+myfile.seek(0)
+
+myfile.read()
+
+myfile.close()
+
+
+#Append to a file
+append_file = open(file='D:\IISWBM\Write_text.txt',mode='a+')
+
+append_file.write("\nAppending information with the brand new text")
+
+append_file.read()
+
+append_file.seek(0)
+
+print(append_file.read())
+
+append_file.close()
+
+
+#context manager
+with open(file='D:\IISWBM\Simple_text.txt',mode='r') as myfile:
+    Variables = myfile.readlines()
+
+Variables
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+2. CSV : 
+
+requirements : names.csv
+
+import csv
+
+# Using Traditional CSV Puller to Read Files
+with open(r'D:/IISWBM/names.csv','r') as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',' )
+    
+    #next(csv_reader)
+
+    
+    for line in csv_reader:
+        print(line)
+
+# Using Traditional CSV Puller to Read Files and then Write Files
+
+with open(r'D:/IISWBM/names.csv','r') as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    
+    with open(file=r'D:\IISWBM\new_names.csv',mode='w', newline='') as new_csv_file:
+        csv_writer = csv.writer(new_csv_file, delimiter= '\t')
+        
+        for line in csv_reader:
+            del line[1]
+            csv_writer.writerow(line)
+
+# Using DictReader CSV Puller to Read Files
+
+with open(r'D:/IISWBM/names.csv','r') as csv_file:
+    csv_reader = csv.DictReader(csv_file)
+    
+    '''next(csv_reader)'''
+    
+    for line in csv_reader:
+        print(line)
+
+# Using DictReader CSV Puller to Read Files and then to Write Files
+
+with open(file=r'D:/IISWBM/names.csv',mode='r') as csv_file:
+    csv_reader = csv.DictReader(f=csv_file)
+    
+    '''next(csv_reader)'''
+    
+    with open(file=r'D:/IISWBM/new_names.csv',mode='w', newline='') as new_file:
+        fieldnames =['first_name', 'last_name']
+        
+        csv_writer = csv.DictWriter(f = new_file, fieldnames=fieldnames, delimiter='\t')
+        csv_writer.writeheader()
+    
+        for line in csv_reader:
+            del line['email']
+            csv_writer.writerow(rowdict=line)
+
+# Using Pandas
+import pandas as pd
+pd.read_csv(filepath_or_buffer=r'D:\IISWBM\AirPassengers.csv')
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+3. PDF : 
+
+requirements : US_Declaration.pdf
+
+import PyPDF2
+
+myfile = open(r'D:/IISWBM/US_Declaration.pdf', mode='rb')
+
+myfile.read()
+
+myfile.seek(0)
+
+#creating an object of the library and passing myfile 
+pdf_reader = PyPDF2.PdfFileReader(stream=myfile)
+
+#fetching the number of pages in the pdf
+pdf_reader.numPages
+
+#Pointing to a specific page for future extraction
+page_1 = pdf_reader.getPage(pageNumber=0)
+
+#extracting the information from the fetched page
+print(page_1.extractText())
+
+myfile.close()
+
+
+#Reading from a PDF File and Writing to another PDF File
+read_file = open(r'D:/IISWBM/US_Declaration.pdf', mode='rb')
+
+#Open a PDF Reader and read it
+pdf_reader = PyPDF2.PdfFileReader(stream=read_file)
+
+# Point the reader to a particular page
+page_2 = pdf_reader.getPage(pageNumber=1)
+
+#Open a PDF File where the write operation needs to be executed.
+write_file = open(r'D:/IISWBM/US_Declaration_Written.pdf',mode='wb')
+
+# Open a PDF Writer 
+pdf_writer = PyPDF2.PdfFileWriter()
+
+# Point the writer to the reader pointer which is going to be written to another pdf.
+pdf_writer.addPage(page=page_2)
+
+#Write the page that was pointed by the writer into the PDF
+pdf_writer.write(stream=write_file)
+
+#Close both the pdf Files
+read_file.close()
+write_file.close()
+
+
+pdf_reader.getPage(pageNumber=1).extractText()
+pdf_writer.getPage(pageNumber=0).extractText()
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+
+4. JSON : 
+
+requirements : [people_string, States.json]
+
+people_string ='''
+
+{
+
+  "people" :
+   [
+    {
+
+      "name" :"John Smith",
+      "phone":"615-555-7164",
+      "emails":["johnsmith@bogusemail.com", "john.smith@work-place.com"],
+      "has_license" : false
+    },
+    {
+      "name" :"Jane Doe",
+      "phone":"560-555-5153",
+      "emails":null,
+      "has_license" : true
+
+    }
+
+   ]
+}
+
+'''
+
+States.json
+
+import json
+
+# loading the json string
+data = json.loads(s = people_string)
+data
+
+type(data)
+
+type(data['people'])
+
+data['people']
+
+for people in data['people']:
+    print(people['name'])
+
+# deleting a particular key from the json:
+for people in data['people']:
+    del people['phone']
+new_string = json.dumps(obj=data, indent=True, sort_keys=True)
+
+print(new_string)
+
+
+# Loading from a File
+with open(file='D:/IISWBM/States.json', mode='r') as f:
+    states = json.load(fp=f)
+
+states
+
+for state in states['states']:
+    print(state)
+
+for state in states['states']:
+    print(state['name'], state['abbreviation'])
+
+# Putting the Updated Json by writing to a Different JSON File.
+with open(file='D:/IISWBM/new_states.json', mode='w') as f:
+    for state in states['states']:
+        del(state['area_codes'])
+    json.dump(obj=states, fp=f, indent=2, sort_keys=True)
+
+
+

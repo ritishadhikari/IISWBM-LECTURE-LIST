@@ -1,0 +1,268 @@
+Spacy_Text_Analytics
+
+Requirement : {npr_sm.csv}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import spacy
+import numpy as np
+import pandas as pd
+
+ 
+#loading the model
+nlp = spacy.load(name = 'en_core_web_sm')
+
+# Validating on what model we have loaded
+type(nlp)
+
+
+text =  'Tesla is looking at buying U.S. Starup for $6 Million'
+
+type(text)
+
+text[0]
+
+# When you call nlp on a text, spaCy first tokenizes the text to produce a Doc object. 
+doc = nlp(text =u'Tesla is looking at buying U.S. Starup for $6 Million')
+
+type(doc)
+
+doc[0]
+
+doc[0].text
+
+doc[0].pos_
+
+doc[0].tag_
+
+doc[0].dep_
+
+doc[0].lemma_
+
+spacy.explain(doc[0].tag_)
+
+####################################################################
+
+<a href='https://spacy.io/usage/spacy-101'> Details about each Key words </a>  
+
+for token in doc:
+    print(f"{token.text} -> TAG <---> {token.tag} <---> {token.tag_} <---> {spacy.explain(token.tag_)} | DEP <---> {token.dep} <---> {token.dep_} <---> {spacy.explain(token.dep_)} | POS <---> {token.pos} <---> {token.pos_} <---> {spacy.explain(token.pos_)} | LEMMA <---> {token.lemma} <---> {token.lemma_} | ALPHA <---> {token.is_alpha} | STOP_WORDS <---> {token.is_stop}", end ="\n\n")
+
+# Explanation about each Tags
+
+#pos
+for token in doc:
+    print(f"{token.text}\'s pos is {token.pos_} which means - {spacy.explain(token.pos_)}")
+
+#tag
+for token in doc:
+    print(f"{token.text}\'s tag is {token.tag_} which means - {spacy.explain(token.tag_)}")
+
+#dep
+for token in doc:
+    print(f"{token.text}\'s dep is {token.dep_} which means - {spacy.explain(token.dep_)}")
+
+
+####################################################################
+
+
+# nlp.pipeline provides the operations characteristics of Spacy
+nlp.pipeline
+
+
+<a href='https://spacy.io/usage/processing-pipelines'> Details about the Pipelines </a>
+
+nlp.pipe_names
+
+####################################################################
+
+stop_words_list = list(nlp.Defaults.stop_words)
+
+
+####################################################################
+
+doc2 = nlp(text = u'Although commmonly attributed to John Lennon from his song "Beautiful Boy", \
+the phrase "Life is what happens to us while we are making other plans" was written by \
+cartoonist Allen Saunders and published in Reader\'s Digest in 1957, when Lennon was 17.')
+
+
+for token in doc2:
+    print(f"{token.text} -> TAG <---> {token.tag} <---> {token.tag_} <---> {spacy.explain(token.tag_)} | DEP <---> {token.dep} <---> {token.dep_} <---> {spacy.explain(token.dep_)} | POS <---> {token.pos} <---> {token.pos_} <---> {spacy.explain(token.pos_)} | LEMMA <---> {token.lemma} <---> {token.lemma_} | ALPHA <---> {token.is_alpha} | STOP_WORDS <---> {token.is_stop}", end ="\n\n")
+
+
+
+lifequote = doc2[16:30]
+
+lifequote
+
+type(doc2)
+
+# spacy smart enough to understand as Span
+type(lifequote)  
+
+####################################################################
+
+### Using Sentence Segmentation
+
+doc3 = nlp(u'This is the First Sentence. This is the Second Sentence. This is the last sentence.')
+
+#Using the .sents method to check for individual sentences
+doc3.sents
+
+for sentence in doc3.sents:
+    print(sentence)
+
+len(list(doc3.sents))
+
+doc3[6]
+
+# True if Sentence Starts, else None
+doc3[6].is_sent_start
+
+
+
+def sentence_counts(message):
+    doc = nlp(text=message)
+    return(len(list(doc.sents)))
+
+sentence_counts(message="Since I will be turning 80 this year, I will thereby become an octogenerian. I will miss my 70/'s")
+
+####################################################################
+
+# Using Named Entity Recognition
+
+doc4 = nlp(u"Apple to build a Hong Kong factory for $6 million. Post that Apple is supposed to overtake Samsung as the largest Mobile Manufacturer in Hong Kong")
+
+# Checking for the entities
+doc4.ents
+
+doc4.ents[0].label_
+
+for ents in doc4.ents:
+    print(f"{ents} - {ents.label_}")
+
+[ents for ents in doc4.ents]
+
+set([ents for ents in doc4.ents])
+
+[ent.orth_ for ent in doc4.ents]
+
+[ent.orth_.lower() for ent in doc4.ents]
+
+len(set([ent.orth_.lower() for ent in doc4.ents]) )
+
+def unique_entity_counts(message):
+    
+    doc = nlp(text=message)
+    
+    unique_entity = len(set([ent.orth_.lower() for ent in doc.ents]) )
+    
+    return(unique_entity)
+
+unique_entity_counts(message="Since I will be turning 80 this year, I will thereby become an octogenerian. I will miss my 70/'s")
+
+####################################################################
+
+# Dealing with Noun Chunks
+doc5 = nlp(u"Autonomous Cars shift insurance Liability toward manufacturers.")
+
+#doc5.noun_chunk is a generator object
+doc5.noun_chunks
+
+for chunk in doc7.noun_chunks:
+    print (chunk)
+
+list(doc7.noun_chunks)	
+
+len(list(doc7.noun_chunks))
+
+####################################################################
+
+### Dealing with spacy.attrs
+
+doc6 = nlp(u"The quick brown fox jumped over the lazy dog's back.")
+
+doc6.count_by(spacy.attrs.POS)
+
+nlp.vocab[96].text
+
+spacy.explain(nlp.vocab[96].text)
+
+doc.count_by(spacy.attrs.POS).items()
+
+for POS_Ind, counts in list(doc6.count_by(spacy.attrs.POS).items()):
+        print(f"{nlp.vocab[POS_Ind].text}--{counts}")
+
+pos_details = [[nlp.vocab[POS].text, COUNTS,]for POS, COUNTS in list(doc6.count_by(spacy.attrs.POS).items())]
+pos_details
+
+pos_details_array = np.array(pos_details)
+pos_details_array
+
+pos_details_array[:,1] = np.round(pos_details_array[:,1].astype('int32')/pos_details_array[:,1].astype('int32').sum(),2)
+pos_details_array
+
+pos_dict = {}
+for pos, pos_perc in pos_details_array:
+    pos_dict[pos] = pos_perc
+
+pos_dict = {pos:pos_perc for pos, pos_perc in pos_details_array}
+pos_dict
+
+
+def pos_norm(message):
+
+    '''
+    convert into nlp doc
+
+    convert into a count_doc based on pos
+
+    convert into a normalized count based on pos
+
+    present it into a form of dictionary
+
+    '''
+    doc= nlp(text = message)
+    
+    pos_details = [[nlp.vocab[POS].text, COUNTS,]for POS, COUNTS in list(doc.count_by(spacy.attrs.POS).items())]
+    
+    pos_details_array = np.array(pos_details)
+    
+    pos_details_array[:,1] = np.round(pos_details_array[:,1].astype('int32')/pos_details_array[:,1].astype('int32').sum(),2)
+
+    pos_dict = {pos:pos_perc for pos, pos_perc in pos_details_array}
+    
+    return pos_dict
+
+pos_norm(message="Since I will be turning 80 this year, I will thereby become an octogenerian. I will miss my 70/'s")
+
+####################################################################
+
+df1 = pd.read_csv(filepath_or_buffer=r'D:/IISWBM/npr_sm.csv', engine='python')
+
+df1['POS_Dict'] = df1['Article'].apply(func = pos_norm)
+
+df1['VERB'] =  df1['POS_Dict'].apply(lambda pos: pos.get('VERB'))
+df1['ADV'] =  df1['POS_Dict'].apply(lambda pos: pos.get('ADV'))
+df1['PRON'] =  df1['POS_Dict'].apply(lambda pos: pos.get('PRON'))
+
+
+df1['Sentence_Counts']=df1['Article'].apply(func=sentence_counts)
+
+df1
+
+df1['Unique_Entities'] = df1['Article'].apply(func=unique_entity_counts)
+
+df1.head()
+
+df1.drop(labels=['POS_Dict'],axis=1)
+
+####################################################################
+
+
+
+
+
+
+
+

@@ -1,0 +1,104 @@
+Webscrapping 2
+
+from bs4 import BeautifulSoup
+import requests
+import csv
+import json
+
+result = requests.get("https://www.whitehouse.gov/briefings-statements/")
+src = result.content
+soup = BeautifulSoup(result.text, 'lxml')
+
+common_link = soup.find(name='body', class_='archive post-type-archive post-type-archive-briefing-statement news').find(name='div', class_='body-overflow' ).find(name='main',id='main-content').find(name='div', class_='page-results__wrap')
+
+article = common_link.find(name='article').h2.a.text
+
+subject = common_link.find(name='article').find(name='div', class_='briefing-statement__content').find(name='div',class_='meta meta--left').find(name='div', class_='meta__issue').p.a.text.strip()
+
+calendar = common_link.find(name='article').find(name='div', class_='briefing-statement__content').find(name='div',class_='meta meta--left').find(name='p',class_='meta__date').time.text
+
+month = calendar.split()[0]
+
+date = calendar.split()[1].split(',')[0]
+
+year=calendar.split()[2]
+
+#Writing to a CSV File
+csv_file = open(file=r'D:\IISWBM\usa_gov.csv',mode='w',newline='')
+csv_writer = csv.writer(csv_file)
+csv_writer.writerow(['article','subject','calendar','month','date','year'])
+
+for articles in common_link.find_all(name='article'):
+    article = articles.h2.a.text
+    subject = articles.find(name='div', class_='briefing-statement__content').find(name='div',class_='meta meta--left').find(name='div', class_='meta__issue').p.a.text.strip()
+    calendar = articles.find(name='div', class_='briefing-statement__content').find(name='div',class_='meta meta--left').find(name='p',class_='meta__date').time.text
+    month = calendar.split()[0]
+    date = calendar.split()[1].split(',')[0]
+    year=calendar.split()[2]
+    csv_writer.writerow([article,subject,calendar,month,date])
+csv_file.close()
+
+#Writing to a JSON File
+json_file = open(file=r'D:\IISWBM\usa_gov.json',mode='w+')
+json_data = {}
+json_data['us_gov'] = []
+
+for articles in common_link.find_all(name='article'):
+    article = articles.h2.a.text
+    subject = articles.find(name='div', class_='briefing-statement__content').find(name='div',class_='meta meta--left').find(name='div', class_='meta__issue').p.a.text.strip()
+    calendar = articles.find(name='div', class_='briefing-statement__content').find(name='div',class_='meta meta--left').find(name='p',class_='meta__date').time.text
+    month = calendar.split()[0]
+    date = calendar.split()[1].split(',')[0]
+    year=calendar.split()[2]
+    json_data['us_gov'].append({'article' : article,'subject':subject, 'month': month ,'date':date,'year': year})  
+json.dump(obj=json_data, fp=json_file, indent=2, sort_keys=True)
+json_file.close()
+
+#Writing to a CSV File for Multiple Pages
+csv_file = open(file=r'D:\IISWBM\usa_gov.csv',mode='w',newline='')
+csv_writer = csv.writer(csv_file)
+csv_writer.writerow(['article','subject','calendar','month','date','year'])
+
+for page in range(20):
+    result = requests.get(f"https://www.whitehouse.gov/briefings-statements/page/{page}/")
+    soup = BeautifulSoup(result.text, 'lxml')
+    
+    for articles in common_link.find_all(name='article'):
+        article = articles.h2.a.text
+        
+        try:
+            subject = articles.find(name='div', class_='briefing-statement__content').find(name='div',class_='meta meta--left').find(name='div', class_='meta__issue').p.a.text.strip()
+        except AttributeError:
+            subject = 'No Subject'
+        
+        calendar = articles.find(name='div', class_='briefing-statement__content').find(name='div',class_='meta meta--left').find(name='p',class_='meta__date').time.text
+        month = calendar.split()[0]
+        date = calendar.split()[1].split(',')[0]
+        year=calendar.split()[2]
+
+        csv_writer.writerow([article,subject,calendar,month,date,year])
+csv_file.close()
+
+
+#Writing to a Json File for Multiple Pages
+json_file = open(file=r'D:\IISWBM\usa_gov.json',mode='w+')
+json_data = {}
+json_data['us_gov'] = []
+
+for page in range(20):
+    result = requests.get(f"https://www.whitehouse.gov/briefings-statements/page/{page}/")
+    soup = BeautifulSoup(result.text, 'lxml')
+    
+    for articles in common_link.find_all(name='article'):
+        article = articles.h2.a.text
+        try:
+            subject = articles.find(name='div', class_='briefing-statement__content').find(name='div',class_='meta meta--left').find(name='div', class_='meta__issue').p.a.text.strip()
+        except AttributeError:
+            subject = 'No Subject'
+        calendar = articles.find(name='div', class_='briefing-statement__content').find(name='div',class_='meta meta--left').find(name='p',class_='meta__date').time.text
+        month = calendar.split()[0]
+        date = calendar.split()[1].split(',')[0]
+        year=calendar.split()[2]
+        json_data['us_gov'].append({'article' : article,'subject':subject, 'month': month ,'date':date,'year': year})  
+json.dump(obj=json_data, fp=json_file, indent=2, sort_keys=True)
+json_file.close()

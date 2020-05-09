@@ -1,0 +1,23 @@
+Explain about HTML
+
+1. Download Atom
+2. Difference between Head and Body and Comments <!-- -->
+3. Enter Text in the Title and the Body (style="background-color:powderblue;) and showcase in the browser.
+4. <h1>,<h2>,<h3>...
+5. <p> for showing break
+6. <strong> for showcasing bold and <em> for showcasing italics
+7. <emphasis> for Italics
+8. <ul> for unordered list
+9. <ol> for ordered list
+10. Divs and Spans as Segments in the HTML Document
+11. <a href=> for the anchor tag. Also showcase how we can access one html file to another. 
+12. <img src="" alt="None">
+13. form with action and method along with input - type, name and value.
+
+
+
+Explain about JSON
+
+
+
+Explain ABOUT XML(if possible)
